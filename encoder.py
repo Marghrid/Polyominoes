@@ -19,9 +19,9 @@ class Encoder:
         self.num_polyominoes = len(self.polyominoes)
         assert all(map(lambda p: p.k() == self.polyominoes[0].k(), self.polyominoes))
 
-        for i, polyomino in enumerate(self.polyominoes):
-            print(f"Polyomino #{i}:")
-            print(str(polyomino))
+        # for i, polyomino in enumerate(self.polyominoes):
+        #     print(f"Polyomino #{i}:")
+        #     print(str(polyomino))
 
         self._vars = {}
         self.init_vars()
@@ -104,8 +104,11 @@ class Encoder:
         return s
 
     def print_constraints(self):
-        for ctr in self.constraints:
-            print(f"{{{', '.join(ctr)}}}")
+        # for ctr in self.constraints:
+        #     print(f"{{{', '.join(ctr)}}}")
+        with open("constraints.txt", "w+") as f:
+            for ctr in self.constraints:
+                f.write(f"{{{', '.join(ctr)}}}\n")
 
     def print_model(self, model: dict):
         reversed_vars = {value: key for (key, value) in self._vars.items()}
@@ -131,9 +134,9 @@ class Encoder:
         for var_id in model:
             assert var_id in reversed_vars.keys()
             if reversed_vars[var_id].startswith("p") and model[var_id]:
-                i, j, k, l = self.de_p(reversed_vars[var_id])
+                i, j, p, l = self.de_p(reversed_vars[var_id])
                 assert (i, j) not in solution.colors
-                solution.add_color(i, j, k)
+                solution.add_color(i, j, p)
         return solution
 
     def encode_board_constraints(self):
@@ -153,25 +156,53 @@ class Encoder:
                     for i in range(self.height):
                         for j in range(self.width):
                             to_sum.append(self.p(i, j, p, l))
-                    self.add_sum_eq1(to_sum)
+                    self.add_sum_le1(to_sum)
 
     def encode_polyomino(self, polyomino: Polyomino, p_idx):
         for i in range(self.height):
             for j in range(self.width):
-                # TODO: Can polyomino be here?
                 if not self.valid_position(i, j, polyomino):
-                    continue
-                # each part is in its position relative to part #0
-                # pos0 -> pos1 /\ pos0 -> pos2 /\ pos0 -> pos3, etc
-                for l in range(1, polyomino.k()):
-                    pos_0 = self.p(i, j, p_idx, 0)
-                    pos_l = self.p(i + polyomino.coords()[l][0], j + polyomino.coords()[l][1],
-                                   p_idx, l)
-                    self.add_constraint([neg(pos_0), pos_l])
+                    for l in range(polyomino.k()):
+                        try:
+                            pos_l = self.p(i + polyomino.coords()[l][0],
+                                           j + polyomino.coords()[l][1],
+                                           p_idx, l)
+                        except AssertionError:
+                            continue
+                        self.add_constraint([neg(pos_l)])
+                else:
+                    # each part is in its position relative to part #0
+                    # pos0 <-> pos1 /\ pos0 <-> pos2 /\ pos0 <-> pos3, etc
+                    for l0 in range(polyomino.k()):
+                        pos_l0 = self.p(i + polyomino.coords()[l0][0],
+                                        j + polyomino.coords()[l0][1],
+                                        p_idx, l0)
+                        for l1 in range(l0, polyomino.k()):
+                            pos_l1 = self.p(i + polyomino.coords()[l1][0],
+                                            j + polyomino.coords()[l1][1],
+                                            p_idx, l1)
+                            self.add_constraint([neg(pos_l0), pos_l1])
+                            self.add_constraint([neg(pos_l1), pos_l0])
+        max_i = max(map(lambda coord: coord[0], polyomino.coords()))
+        max_j = max(map(lambda coord: coord[1], polyomino.coords()))
+        for l, c in enumerate(polyomino.coords()):
+            for i in range(c[0]):  # Do not put second-line parts on the first line
+                for j in range(self.width):
+                    self.add_constraint([neg(self.p(i, j, p_idx, l))])
+            for i in range(max_i - c[0] - self.height + 1):
+                for j in range(self.width):
+                    self.add_constraint([neg(self.p(i, j, p_idx, l))])
+
+            for j in range(c[1]):  # Do not put second-column parts on the first column
+                for i in range(self.height):
+                    self.add_constraint([neg(self.p(i, j, p_idx, l))])
+            for j in range(max_j - c[1] - self.width + 1):
+                for i in range(self.height):
+                    self.add_constraint([neg(self.p(i, j, p_idx, l))])
 
     def valid_position(self, i, j, polyomino):
         min_i = min(map(lambda coord: i + coord[0], polyomino.coords()))
         max_i = max(map(lambda coord: i + coord[0], polyomino.coords()))
         min_j = min(map(lambda coord: j + coord[1], polyomino.coords()))
         max_j = max(map(lambda coord: j + coord[1], polyomino.coords()))
-        return min_i > 0 and min_j > 0 and max_i < self.height and max_j < self.width
+        return min_i >= 0 and min_j >= 0 and max_i < self.height and max_j < self.width

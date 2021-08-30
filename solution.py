@@ -36,12 +36,16 @@ class Solution:
         self.check_solution()
         data = []
         plt.figure()
+        all_colors = set()
+        for color in self.colors.values():
+            all_colors.add(color)
+        colors_list = sorted(all_colors)
         for i in range(self.height):
             data_r = []
             for j in range(self.width):
-                data_r.append(self.colors[(i, j)])
+                data_r.append(colors_list.index(self.colors[(i, j)]))
             data.append(data_r)
-        plt.imshow(data, cmap="Set3")
+        plt.imshow(data, cmap="tab20")
         plt.axis('off')
 
         if filename is not None and len(filename) > 0:
@@ -56,7 +60,7 @@ class Solution:
         for i in range(self.height):
             for j in range(self.width):
                 k = self.colors[(i, j)]
-                s = colored(str(k) + " ", term_colors[k % len(term_colors)])
+                s = colored(f"{str(k).rjust(len(str(len(self.colors) - 1)), '0')} ", term_colors[k % len(term_colors)])
                 ret += s + " "
             ret += '\n'
         return ret[:-1]

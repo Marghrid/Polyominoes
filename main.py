@@ -1,6 +1,7 @@
 import argparse
 import socket
 import subprocess
+import sys
 import time
 from typing import Optional
 
@@ -93,6 +94,7 @@ def send_to_solver(cnf: str):
     s_out = str(po, encoding='utf-8').splitlines()
     s_err = str(pe, encoding='utf-8').split()
     # print('\n'.join(s_out), file=sys.stderr)
+    # print('\n'.join(s_err), file=sys.stderr)
     # print(cnf, file=sys.stderr)
     # print(s_out)
     print(f"took {nice_time(time.time() - start_time)}.")
@@ -103,7 +105,7 @@ def send_to_solver(cnf: str):
     elif rc == 20:
         return 0, None
     else:
-        return None
+        raise ValueError(f"Something wrong with solver {solver}.")
 
 
 def handle_sat(model: dict, encoder, elapsed):
