@@ -60,7 +60,8 @@ class Solution:
         for i in range(self.height):
             for j in range(self.width):
                 k = self.colors[(i, j)]
-                s = colored(f"{str(k).rjust(len(str(len(self.colors) - 1)), '0')} ", term_colors[k % len(term_colors)])
+                s = colored(f"{str(k).rjust(len(str(len(self.colors) - 1)), '0')} ",
+                            term_colors[k % len(term_colors)])
                 ret += s + " "
             ret += '\n'
         return ret[:-1]

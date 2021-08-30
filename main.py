@@ -1,7 +1,8 @@
 import argparse
+import os
+import shutil
 import socket
 import subprocess
-import sys
 import time
 from typing import Optional
 
@@ -14,7 +15,6 @@ solver = "cadical"
 solutions = set()
 inesc_servers = ["centaurus", "musca", "octans", "scutum", "spica", "serpens", "sextans", "crux",
                  "crater", "corvus", "dorado"]
-pretty_representations_dir = "/home/macf/public_html/polyominoes/"
 
 
 def sign(lit): return lit[0] == '-'
@@ -108,7 +108,7 @@ def send_to_solver(cnf: str):
         raise ValueError(f"Something wrong with solver {solver}.")
 
 
-def handle_sat(model: dict, encoder, elapsed):
+def handle_sat(model: dict, encoder, elapsed, save_dir):
     """ Print everything after a positive reply from the solver. """
     solution = encoder.get_solution(model)
     if True:  # config.print_model:
@@ -127,7 +127,7 @@ def handle_sat(model: dict, encoder, elapsed):
     #     solution.dump(filename)
     if True:  # config.show_solution:
         if socket.gethostname() in inesc_servers:
-            filename = pretty_representations_dir + f'xoxo_{len(solutions):03}.svg'
+            filename = save_dir + f'polyominoes_{len(solutions):03}.svg'
             solution.show(filename)
         else:
             solution.show()
@@ -140,9 +140,14 @@ def main():
     assert (config.width * config.height) % config.k == 0, \
         f"The number of tiles in the board ({config.width}x{config.height}" \
         f"={config.width * config.height}) must be a multiple of the size of " \
-        f"polyominos ({config.k})."
+        f"polyominoes ({config.k})."
 
     polyominoes = build_polyominoes(config.k)
+    save_dir = f"/home/macf/public_html/polyominoes/" \
+               f"configs_{config.width}x{config.height}_{config.k}{'_u' if config.unique else ''}/"
+    if os.path.exists(save_dir):
+        shutil.rmtree(save_dir)
+    os.mkdir(save_dir)
     assert all(map(lambda p: p._k == config.k, polyominoes))
     print(f"Generated {len(polyominoes)} polyominoes of size {config.k}.")
     encoder = Encoder(config, polyominoes)
@@ -163,7 +168,7 @@ def main():
     while result == 1:
         assert model is not None
         num_sat_calls += 1
-        handle_sat(model, encoder, time.time() - start_time)
+        handle_sat(model, encoder, time.time() - start_time, save_dir)
 
         # block this model
         print("# blocking model...")
