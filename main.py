@@ -9,6 +9,7 @@ from typing import Optional
 from configurations import Configurations
 from encoder import Encoder
 from polyomino import Polyomino
+from webpage_info import webpage_style, webpage_index
 
 config: Optional["Configurations"] = None
 solver = "cadical"
@@ -148,6 +149,10 @@ def main():
     if os.path.exists(save_dir):
         shutil.rmtree(save_dir)
     os.mkdir(save_dir)
+    with open(save_dir + "style.css") as f:
+        f.write(webpage_style)
+    with open(save_dir + "index.php") as f:
+        f.write(webpage_index)
     assert all(map(lambda p: p._k == config.k, polyominoes))
     print(f"Generated {len(polyominoes)} polyominoes of size {config.k}.")
     encoder = Encoder(config, polyominoes)
