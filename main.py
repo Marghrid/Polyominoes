@@ -149,9 +149,9 @@ def main():
     if os.path.exists(save_dir):
         shutil.rmtree(save_dir)
     os.mkdir(save_dir)
-    with open(save_dir + "style.css") as f:
+    with open(save_dir + "style.css", "w") as f:
         f.write(webpage_style)
-    with open(save_dir + "index.php") as f:
+    with open(save_dir + "index.php", "w") as f:
         f.write(webpage_index)
     assert all(map(lambda p: p._k == config.k, polyominoes))
     print(f"Generated {len(polyominoes)} polyominoes of size {config.k}.")
