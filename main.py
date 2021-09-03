@@ -122,16 +122,12 @@ def handle_sat(model: dict, encoder, elapsed, save_dir):
     if solution in solutions:
         print("# Repeated solution. Not saving.")
         return
-    # if config.store_solution:
-    #     filename = solutions_dir + f'xoxo_{len(solutions):03}.out'
-    #     print(f"# Saving solution to {filename}...")
-    #     solution.dump(filename)
-    if True:  # config.show_solution:
-        if socket.gethostname() in inesc_servers:
-            filename = save_dir + f'polyominoes_{len(solutions):03}.svg'
-            solution.show(filename)
-        else:
-            solution.show()
+
+    if save_dir is not None:
+        filename = save_dir + f'polyominoes_{len(solutions):03}.svg'
+        solution.show(filename)
+    else:
+        solution.show()
     solutions.add(solution)
 
 
@@ -144,15 +140,18 @@ def main():
         f"polyominoes ({config.k})."
 
     polyominoes = build_polyominoes(config.k)
-    save_dir = f"/home/macf/public_html/polyominoes/" \
-               f"configs_{config.width}x{config.height}_{config.k}{'_u' if config.unique else ''}/"
-    if os.path.exists(save_dir):
-        shutil.rmtree(save_dir)
-    os.mkdir(save_dir)
-    with open(save_dir + "style.css", "w") as f:
-        f.write(webpage_style)
-    with open(save_dir + "index.php", "w") as f:
-        f.write(webpage_index)
+    if socket.gethostname() in inesc_servers:
+        save_dir = f"/home/macf/public_html/polyominoes/" \
+                   f"configs_{config.width}x{config.height}_{config.k}{'_u' if config.unique else ''}/"
+        if os.path.exists(save_dir):
+            shutil.rmtree(save_dir)
+        os.mkdir(save_dir)
+        with open(save_dir + "style.css", "w") as f:
+            f.write(webpage_style)
+        with open(save_dir + "index.php", "w") as f:
+            f.write(webpage_index)
+    else:
+        save_dir = None
     assert all(map(lambda p: p._k == config.k, polyominoes))
     print(f"Generated {len(polyominoes)} polyominoes of size {config.k}.")
     encoder = Encoder(config, polyominoes)

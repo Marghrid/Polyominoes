@@ -1,7 +1,7 @@
-webpage_style = """body {
+webpage_style = r"""body {
   margin: auto;
   /*background: white;*/
-  font-family: Merriweather, sans-serif;
+  font-family: sans-serif;
   color: rgba(0, 0, 0, .8);
   line-height: 1.8em;
   padding: 1%;
@@ -137,12 +137,11 @@ span.smallcaps {
 }
 """
 
-webpage_index = """<!DOCTYPE html>
+webpage_index = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <title>Polyominoes</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Merriweather" />
   <link rel="stylesheet" type="text/css" href="style.css" />
   <meta name="theme-color" content="#ffffff">
 </head>
